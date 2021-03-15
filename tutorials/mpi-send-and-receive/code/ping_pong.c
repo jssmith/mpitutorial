@@ -10,9 +10,10 @@
 #include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 int main(int argc, char** argv) {
-  const int PING_PONG_LIMIT = 10;
+  const int PING_PONG_LIMIT = 1000000;
 
   // Initialize the MPI environment
   MPI_Init(NULL, NULL);
@@ -30,19 +31,26 @@ int main(int argc, char** argv) {
 
   int ping_pong_count = 0;
   int partner_rank = (world_rank + 1) % 2;
+
+  clock_t t;
+  t = clock();
   while (ping_pong_count < PING_PONG_LIMIT) {
     if (world_rank == ping_pong_count % 2) {
       // Increment the ping pong count before you send it
       ping_pong_count++;
       MPI_Send(&ping_pong_count, 1, MPI_INT, partner_rank, 0, MPI_COMM_WORLD);
-      printf("%d sent and incremented ping_pong_count %d to %d\n",
-             world_rank, ping_pong_count, partner_rank);
+//      printf("%d sent and incremented ping_pong_count %d to %d\n",
+//             world_rank, ping_pong_count, partner_rank);
     } else {
       MPI_Recv(&ping_pong_count, 1, MPI_INT, partner_rank, 0, MPI_COMM_WORLD,
                MPI_STATUS_IGNORE);
-      printf("%d received ping_pong_count %d from %d\n",
-             world_rank, ping_pong_count, partner_rank);
+//      printf("%d received ping_pong_count %d from %d\n",
+//             world_rank, ping_pong_count, partner_rank);
     }
   }
+  t = clock() - t;
+  double elapsed_sec = ((double) t) / CLOCKS_PER_SEC;
+  printf("elapsed time is %f\n", elapsed_sec);
+  printf("time per iteration is %f ns\n", elapsed_sec * 1e9 / PING_PONG_LIMIT);
   MPI_Finalize();
 }
